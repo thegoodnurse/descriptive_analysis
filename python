@@ -1,0 +1,443 @@
+#######OBS!!! todos os bancos devem ser carregados fazendo upload na pasta de arquivos do colab
+
+
+#########################abrindo dbf
+
+#!pip install dbfread
+from dbfread import DBF
+
+# Caminho para o arquivo DBF
+arquivo_dbf = 'SINANEX.DBF'
+
+# Tentar ler o arquivo DBF com diferentes codificações
+for encoding in ['utf-8', 'latin1', 'cp1252', 'ascii']:
+    try:
+        tabela_dbf = DBF(arquivo_dbf, encoding=encoding)
+        print(f"Arquivo DBF lido com sucesso usando codificação: {encoding}")
+      
+        
+        # Mostrar os primeiros registros para verificar
+        for i, registro in enumerate(tabela_dbf):
+            if i >= 5:  # Mostrar apenas os primeiros 5 registros
+                break
+            print(registro)
+            
+        break  # Sai do loop se conseguir ler com sucesso
+    except Exception as e:
+        print(f"Erro ao tentar ler com codificação {encoding}: {e}")
+
+################lendo o banco no formato uft-8
+#!pip install pandas
+import pandas as pd
+from dbfread import DBF
+
+# Caminho para o arquivo DBF
+arquivo_dbf = 'SINANEX.DBF'  # Substitua com o caminho correto do seu arquivo DBF
+
+# Ler o arquivo DBF usando o DBFread
+tabela_dbf = DBF(arquivo_dbf, encoding='utf-8')
+
+# Converter para DataFrame do Pandas
+df = pd.DataFrame(tabela_dbf)
+
+# Criar tabela de frequência da variável 'SEXO'
+frequencia_sexo = df['SEXO'].value_counts()
+
+# Exibir a tabela de frequência
+print("\nTabela de Frequência da Variável 'SEXO':")
+print(frequencia_sexo)
+
+##########################################################################################################33
+############abrindo arquivo excel
+
+#!pip install pandas openpyxl
+
+import pandas as pd
+
+# Caminho para o arquivo Excel
+arquivo_excel = 'banco.xlsx'  # Substitua com o caminho correto do seu arquivo Excel
+
+# Lendo o arquivo Excel
+df = pd.read_excel(arquivo_excel)
+
+# Exibindo os primeiros registros do DataFrame
+print(df.head())
+
+#################abrindo arquivo .dta
+
+#!pip install pandas pyreadstat
+
+import pandas as pd
+import pyreadstat
+
+# Caminho para o arquivo .dta
+arquivo_dta = 'covid3.dta'  # Substitua com o caminho correto do seu arquivo .dta
+
+# Lendo o arquivo .dta
+df, meta = pyreadstat.read_dta(arquivo_dta)
+
+# Exibindo os primeiros registros do DataFrame
+print(df.head())
+
+statistics = df['death'].describe()
+print(statistics)
+
+##############abrindo arquivo do spss
+
+#!pip install pandas pyreadstat
+
+import pandas as pd
+import pyreadstat
+
+# Caminho para o arquivo .sav
+arquivo_sav = 'lab.sav'  # Substitua com o caminho correto do seu arquivo .sav
+
+# Lendo o arquivo .sav
+df, meta = pyreadstat.read_sav(arquivo_sav)
+
+# Exibindo os primeiros registros do DataFrame
+print(df.head())
+
+# Criar a tabela de frequência da variável 'AGRAVO'
+frequencia_agravo = df['AGRAVO'].value_counts()
+
+# Exibir a tabela de frequência
+print("Tabela de Frequência da variável 'AGRAVO':")
+print(frequencia_agravo)
+
+##########################abrindo csv
+#!pip install pandas
+import pandas as pd
+df = pd.read_csv("baby.csv", sep=";")
+print(df.head())
+print("\nInformações do DataFrame:")
+print(df.info())
+print("\nEstatísticas descritivas do DataFrame:")
+print(df.describe())
+print("\nValores ausentes:")
+print(df.isnull().sum())
+print("\nValores duplicados:")
+print(df.duplicated().sum())
+print("\nNomes das colunas:")
+print(df.columns)
+print("\nValores da coluna 'systolicblood':")
+print(df['systolicblood'])
+df_filtrado = df[df['gender'] == 1]
+print("\nDataFrame filtrado:")
+print(df_filtrado)
+df_ordenado = df.sort_values('systolicblood')
+print("\nDataFrame ordenado:")
+print(df_ordenado)
+df_agrupado_mean = df.groupby('gender').mean()
+print("\nDataFrame agrupado_mean:")
+print(df_agrupado_mean)
+df_agrupado_sum = df.groupby('gender').sum()
+print("\nDataFrame agrupado_sum:")
+print(df_agrupado_sum)
+#############################################################
+
+#############abrindo banco a partir de url
+#!install ssl urllib
+import pandas as pd
+import ssl
+import urllib
+url="https://dados.anvisa.gov.br/dados/TA_PRECOS_MEDICAMENTOS.csv"
+ssl._create_default_https_context=ssl._create_unverified_context
+df = pd.read_csv(url, sep=";", encoding='latin1')
+print(df.head())
+
+############################################unindo bancos######
+import pandas as pd
+df1 = pd.read_csv("baby.csv", sep=";")
+df2 = pd.read_csv("baby2.csv", sep=";")
+merged_df = pd.merge(df1, df2, on='observation', how='inner')
+print(merged_df.head())
+merged_df['imc'] = merged_df['birthweight'] / (merged_df['height'] ** 2)
+print(merged_df.head())
+#############################estatisticas do banco
+print(merged_df.describe())
+statistics = merged_df['ageindays'].describe()
+print(statistics)
+#############################criando faixa etaria
+bins = list(range(0, merged_df['ageindays'].max() +2, 2))  # +2 para incluir o último intervalo
+labels = [f'{i}-{i+1}' for i in range(0, merged_df['ageindays'].max(), 2)]
+merged_df['faixa_etaria'] = pd.cut(merged_df['ageindays'], bins=bins, labels=labels, right=False)
+print(merged_df.head())
+####criando variavel binaria###etc####################
+df = merged_df
+df['pressaoalta'] = df['systolicblood'].apply(lambda x: 1 if x >= 88 else 0)
+print(df)
+# Dicionário de mapeamento
+mapeamento = {2: 'muitonovo', 3: 'novo', 4: 'intermediario', 5: 'avancado'}
+# Aplicar o mapeamento usando map()
+df['faixa_etaria'] = df['ageindays'].map(mapeamento)
+print(df)
+######################### Filtrando o banco
+###################filtrar por apenas a categoria de gênero feminino (por exemplo, '0')
+df_feminino = df[df['gender'] == 0]
+print(df_feminino.head())
+# Filtrar apenas a categoria de sexo masculino (por exemplo, '1') 
+df_masculino = df[df['gender'] == 1]
+print(df_masculino.head())
+# Filtrar apenas a categoria de sexo masculino (por exemplo, '1') e também categori 1 da variavel pressaoalta
+df_filtrado = df[(df['gender'] == 1) & (df['pressaoalta'] == 1)]
+print(df_filtrado.head())
+# Renomear a variável 'gender' para 'sexo'
+df = df.rename(columns={'gender': 'sexo'})
+print(df.head())
+########################################################salvar banco de dados
+# Salvar o DataFrame como um arquivo CSV
+df.to_csv('dados_baby.csv', index=False)
+print("DataFrame salvo como CSV com sucesso.")
+
+#######################################################abrindo arquivo zipado
+import zipfile
+import io
+
+zip_file = 'base_terr.zip'
+
+# Descompactando o arquivo zip
+with zipfile.ZipFile(zip_file, 'r') as zip_ref:
+    zip_ref.extractall('extracted_folder')  # 'extracted_folder' é o diretório onde os arquivos serão extraídos
+
+import pandas as pd
+
+# Tentar ler o arquivo CSV com diferentes codificações
+codificacoes = ['utf-8', 'latin1', 'cp1252']  # Adicione outras codificações se necessário
+
+caminho_arquivo = 'extracted_folder/tb_uf.csv'
+
+for encoding in codificacoes:
+    try:
+        df = pd.read_csv(caminho_arquivo, encoding=encoding, sep=";")
+        print(f"Arquivo lido com sucesso usando a codificação: {encoding}")
+        print(df.head())  # Exemplo: exibe as primeiras linhas do DataFrame
+        break  # Se conseguiu ler com sucesso, saia do loop
+    except UnicodeDecodeError:
+        print(f"Falha ao ler com a codificação: {encoding}. Tentando próxima codificação...")
+
+# Se nenhum encoding funcionou, você pode tentar mais opções ou verificar o tipo de codificação do arquivo original.
+
+
+#################removendo variaveis do banco
+import pandas as pd
+caminho_arquivo = 'extracted_folder/tb_uf.csv'
+df = pd.read_csv(caminho_arquivo, sep=";", encoding='latin1')
+
+print(df.head())
+
+dfn = df.drop(columns=['CO_ALTER'])
+print(dfn.head())
+
+#######################colando colunas de 2 bancos
+import pandas as pd
+
+# Carregar os arquivos CSV com a codificação correta
+arquivo_csv1 = 'baby.csv'
+arquivo_csv2 = 'baby2.csv'
+df1 = pd.read_csv(arquivo_csv1, encoding='latin1', sep=";")
+df2 = pd.read_csv(arquivo_csv2, encoding='latin1', sep=";")
+
+# Exibir as primeiras linhas dos DataFrames para verificar as colunas
+
+print(df1)
+print(df2)
+
+######################concatenar colunas do dataframe
+
+# Concatenar os DataFrames pelas colunas (axis=1)
+#igual ao cbind
+df_concatenado = pd.concat([df1, df2], axis=1)
+
+# Exibir o DataFrame concatenado
+print("Primeiras linhas do DataFrame concatenado:")
+print(df_concatenado.head())
+
+#######################colando linhas de 2 bancos
+#igual rbind
+#!pip install pandas
+import pandas as pd
+arquivo_csv1 = 'baby.csv'
+arquivo_csv2 = 'baby.csv'
+df1 = pd.read_csv(arquivo_csv1, encoding='latin1', sep=";")
+df2 = pd.read_csv(arquivo_csv2, encoding='latin1', sep=";")
+# Concatenando os DataFrames verticalmente
+df_combinado = pd.concat([df1, df2], axis=0, ignore_index=True)
+# Exibindo o DataFrame combinado
+print(df_combinado)
+statistics = df_combinado['systolicblood'].describe()
+print(statistics)
+############################################
+
+##################tipo de variável e convertendo variaveis
+#########################abrindo dbf
+
+#!pip install dbfread
+
+################lendo o banco no formato uft-8
+#!pip install pandas
+import pandas as pd
+from dbfread import DBF
+# Caminho para o arquivo DBF
+arquivo_dbf = 'SINANEX.DBF'  # Substitua com o caminho correto do seu arquivo DBF
+# Ler o arquivo DBF usando o DBFread
+tabela_dbf = DBF(arquivo_dbf, encoding='utf-8')
+# Converter para DataFrame do Pandas
+df = pd.DataFrame(tabela_dbf)
+
+##############string para numerica
+print(f"O tipo da variável SEXO é: {type('SEXO')}")
+# Criar tabela de frequência da variável 'SEXO'
+frequencia_sexo = df['SEXO'].value_counts()
+# Exibir a tabela de frequência
+print("\nTabela de Frequência da Variável 'SEXO':")
+print(frequencia_sexo)
+# Converter a coluna 'SEXO' para numérica
+df['SEXO_NUM'] = df['SEXO'].astype(int)
+# Verificar o tipo da variável 'SEXO_NUM' após a conversão
+print(f"O tipo da variável SEXO_NUM é: {df['SEXO_NUM'].dtype}")
+# ou
+print(f"O tipo da variável 'SEXO_NUM' é: {type(df['SEXO_NUM'].iloc[0])}")
+
+##############numerica para string
+# Converter a coluna 'SEXO_NUM' (supondo que seja numérica) para string
+df['SEXO_STR'] = df['SEXO_NUM'].astype(str)
+# Mostrar o tipo do objeto 'SEXO_STR'
+print(f"O tipo da variável 'SEXO_STR' é: {type(df['SEXO_STR'].iloc[0])}")
+
+#######################datas
+################lendo o banco no formato uft-8
+#!pip install pandas
+import pandas as pd
+from dbfread import DBF
+# Caminho para o arquivo DBF
+arquivo_dbf = 'SINANEX.DBF'  # Substitua com o caminho correto do seu arquivo DBF
+# Ler o arquivo DBF usando o DBFread
+tabela_dbf = DBF(arquivo_dbf, encoding='utf-8')
+# Converter para DataFrame do Pandas
+df = pd.DataFrame(tabela_dbf)
+##############string para data
+print(f"O tipo da variável 'DTNASC' é: {type('DTNASC')}")
+print(df[['DTNASC']])
+#import datetime
+# Converter a coluna 'DTNASC' para datetime no formato YYYYMMDD
+df['DTNASC'] = pd.to_datetime(df['DTNASC'], format='%Y%m%d', errors='coerce')
+
+# Verificar se a conversão foi bem-sucedida
+print("\nPrimeiras linhas do DataFrame após a conversão:")
+print(df[['DTNASC']])
+print(f"O tipo da variável 'DTNASC' é: {type('DTNASC')}")
+
+############diferenca entre 2 datas############calculando a idade
+#!pip install python-dateutil
+#from dateutil.relativedelta import relativedelta
+
+# Adicionar uma coluna 'DATA_ATUAL' para exemplo, vamos usar a data de hoje
+df['DATA_ATUAL'] = pd.Timestamp.today()
+
+# Calcular a diferença entre 'DATA_ATUAL' e 'DTNASC'
+df['DIFERENCA_DIAS'] = (df['DATA_ATUAL'] - df['DTNASC']).dt.days
+
+# Calcular a diferença em anos entre 'DATA_ATUAL' e 'DTNASC'
+def calculate_age(birth_date, current_date):
+    return current_date.year - birth_date.year - ((current_date.month, current_date.day) < (birth_date.month, birth_date.day))
+
+df['DIFERENCA_ANOS'] = df.apply(lambda row: calculate_age(row['DTNASC'], row['DATA_ATUAL']), axis=1)
+
+# Verificar se a conversão foi bem-sucedida
+print("\nPrimeiras linhas do DataFrame após a conversão:")
+print(df[['DTNASC', 'DATA_ATUAL', 'DIFERENCA_DIAS', 'DIFERENCA_ANOS']].head())
+
+############################Modificando os valores de uma coluna 
+################lendo o banco no formato uft-8
+import pandas as pd
+from dbfread import DBF
+
+# Caminho para o arquivo DBF
+arquivo_dbf = 'SINANEX.DBF'  # Substitua com o caminho correto do seu arquivo DBF
+
+# Ler o arquivo DBF usando o DBFread
+tabela_dbf = DBF(arquivo_dbf, encoding='utf-8')
+
+# Converter para DataFrame do Pandas
+df = pd.DataFrame(tabela_dbf)
+
+# Criar tabela de frequência da variável 'NOME'
+frequencia_nome = df['NOME'].value_counts()
+
+# Exibir a tabela de frequência
+print("\nTabela de Frequência da Variável 'NOME':")
+print(frequencia_nome)
+
+import pandas as pd
+
+# Removendo "DE", "DA", "DO", "DOS", "DAS"
+df['NOME'] = df['NOME'].str.replace(r'\b(DE|DA|DO|DOS|DAS)\b', '', regex=True).str.strip()
+
+# Exibindo o DataFrame modificado
+print(df)
+
+#################################################################################3
+############################Dividindo colunas com base em separador
+# Separando a coluna 'NOME' em colunas distintas
+df_separado = df['NOME'].str.split(' ', expand=True)
+
+print(df_separado.head())
+
+#####################################exemplo de dados da populacao extraidos do datasus
+#!pip install pandas
+import pandas as pd
+caminho_pop = 'exercicio/ibge_cnv_popsvsbr133139152_92_137_42.csv'
+dfpop = pd.read_csv(caminho_pop, delimiter=';', encoding='latin-1')
+print(dfpop)
+
+# Remover as linhas 27 
+dfpop = dfpop.drop([27])
+
+# Redefinir os índices do DataFrame após a remoção
+dfpop = dfpop.reset_index(drop=True)
+
+# Exibir o DataFrame
+print(dfpop)
+
+#################################################################################3
+# Separando a coluna 'NOME' em colunas distintas
+dfpop_separado = dfpop['Capital'].str.split(' ', expand=True)
+print(dfpop_separado.head())
+
+# Concatenar as colunas separadas ao DataFrame original
+dfpop = pd.concat([dfpop, dfpop_separado], axis=1)
+
+# Exibir o DataFrame com as colunas separadas
+print(dfpop.head())
+
+# Criar uma nova coluna 'Capital_Nova' apenas com valores não nulos das colunas "1", "2" e "3"
+dfpop['Capital_Nova'] = dfpop_separado[1].fillna('') + ' ' + dfpop_separado[2].fillna('') + ' ' + dfpop_separado[3].fillna('')
+
+# Remover as colunas "1", "2" e "3" do DataFrame
+dfpop = dfpop.drop(columns=[1, 2, 3])
+
+# Exibir o DataFrame com a nova coluna 'Capital_Nova'
+print(dfpop.head())
+
+########renomear colunas
+
+# Renomear a coluna "0" para "cod"
+dfpop = dfpop.rename(columns={0: 'cod'})
+
+# Renomear a coluna "2020" para "pop2020"
+dfpop = dfpop.rename(columns={"2020": 'pop2020'})
+
+# Renomear a coluna "2021" para "pop2021"
+dfpop = dfpop.rename(columns={"2021": 'pop2021'})
+
+# Mostrar o nome das colunas do DataFrame resultante
+print("Colunas do DataFrame resultante:")
+print(dfpop.columns)
+
+################removendo colunas desnecessarias
+
+# Remover as coluna capital do DataFrame
+dfpop = dfpop.drop(columns=["Capital"])
+print(dfpop.columns)
+print(dfpop)
